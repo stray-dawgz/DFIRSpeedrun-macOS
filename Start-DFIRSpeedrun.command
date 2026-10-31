@@ -1,5 +1,5 @@
 #!/bin/bash
-# DFIRSpeedrun macOS 0.1.0-rc1. No runtime downloads or enrollment.
+# DFIRSpeedrun macOS 0.1.0-rc2. No runtime downloads or enrollment.
 set -u
 set -o pipefail
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
@@ -52,9 +52,9 @@ finish_interrupted() {
   exit 130
 }
 trap finish_interrupted INT TERM HUP
-printf 'version=0.1.0-rc1\nstate=RUNNING\nstarted_utc=%s\narchitecture=%s\n' "$(/bin/date -u +%FT%TZ)" "$ARCH" > "$STATUS" || exit 1
+printf 'version=0.1.0-rc2\nstate=RUNNING\nstarted_utc=%s\narchitecture=%s\n' "$(/bin/date -u +%FT%TZ)" "$ARCH" > "$STATUS" || exit 1
 {
-  printf 'DFIRSpeedrun macOS 0.1.0-rc1\nUTC: '; /bin/date -u +%FT%TZ
+  printf 'DFIRSpeedrun macOS 0.1.0-rc2\nUTC: '; /bin/date -u +%FT%TZ
   /usr/bin/sw_vers
   /usr/bin/uname -a
   /usr/bin/id

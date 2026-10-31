@@ -1,7 +1,7 @@
 # Get the complete tool
 
 Download the ready-to-extract package from the
-[v0.1.0-rc1 prerelease](https://github.com/stray-dawgz/DFIRSpeedrun-macOS/releases/tag/v0.1.0-rc1).
+[v0.1.0-rc2 prerelease](https://github.com/stray-dawgz/DFIRSpeedrun-macOS/releases/tag/v0.1.0-rc2).
 
 This source checkout omits the two unmodified upstream Velociraptor binaries.
 Both are included in the release's `.tar.gz` asset. The `.sha256` sidecar verifies

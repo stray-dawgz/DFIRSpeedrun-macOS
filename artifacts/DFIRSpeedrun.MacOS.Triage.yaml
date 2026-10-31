@@ -100,34 +100,210 @@ sources:
       FROM RawGlobs
   - name: Commands
     query: |
-      LET Commands <= [
-        dict(Label='OSVersion', Argv=['/usr/bin/sw_vers']),
-        dict(Label='Uptime', Argv=['/usr/bin/uptime']),
-        dict(Label='LoggedInUsers', Argv=['/usr/bin/who']),
-        dict(Label='RecentLogins', Argv=['/usr/bin/last', '-100']),
-        dict(Label='ProcessSnapshot', Argv=['/bin/ps', 'auxww']),
-        dict(Label='NetworkInterfaces', Argv=['/sbin/ifconfig', '-a']),
-        dict(Label='Routes', Argv=['/usr/sbin/netstat', '-rn']),
-        dict(Label='DNSConfiguration', Argv=['/usr/sbin/scutil', '--dns']),
-        dict(Label='ProxyConfiguration', Argv=['/usr/sbin/scutil', '--proxy']),
-        dict(Label='Sockets', Argv=['/usr/sbin/lsof', '-nP', '-i']),
-        dict(Label='SystemLaunchd', Argv=['/bin/launchctl', 'print', 'system']),
-        dict(Label='BackgroundItems', Argv=['/usr/bin/sfltool', 'dumpbtm']),
-        dict(Label='LocalUsers', Argv=['/usr/bin/dscl', '.', '-list', '/Users', 'UniqueID']),
-        dict(Label='LocalAdmins', Argv=['/usr/bin/dscl', '.', '-read', '/Groups/admin', 'GroupMembership']),
-        dict(Label='Applications', Argv=['/usr/sbin/system_profiler', '-json', 'SPApplicationsDataType', '-timeout', '120']),
-        dict(Label='PackageReceipts', Argv=['/usr/sbin/pkgutil', '--pkgs']),
-        dict(Label='ConfigurationProfiles', Argv=['/usr/bin/profiles', 'show', '-type', 'configuration']),
-        dict(Label='SystemExtensions', Argv=['/usr/bin/systemextensionsctl', 'list']),
-        dict(Label='LoadedKernelExtensions', Argv=['/usr/bin/kmutil', 'showloaded']),
-        dict(Label='FileVaultStatus', Argv=['/usr/bin/fdesetup', 'status']),
-        dict(Label='MountedVolumes', Argv=['/sbin/mount']),
-        dict(Label='DiskInventory', Argv=['/usr/sbin/diskutil', 'list', '-plist']),
-        dict(Label='APFSInventory', Argv=['/usr/sbin/diskutil', 'apfs', 'list', '-plist']),
-        dict(Label='FirewallState', Argv=['/usr/libexec/ApplicationFirewall/socketfilterfw', '--getglobalstate']),
-        dict(Label='FirewallApplications', Argv=['/usr/libexec/ApplicationFirewall/socketfilterfw', '--listapps']),
-        dict(Label='SecurityLogs24h', Argv=['/usr/bin/log', 'show', '--last', '24h', '--style', 'json', '--predicate', 'process == "sudo" OR process == "sshd" OR process == "authd" OR process == "syspolicyd" OR process == "tccd" OR process == "XProtectService"'])
+      LET Commands <= parse_json_array(data='''
+      [
+        {
+          "Label": "OSVersion",
+          "Argv": [
+            "/usr/bin/sw_vers"
+          ]
+        },
+        {
+          "Label": "Uptime",
+          "Argv": [
+            "/usr/bin/uptime"
+          ]
+        },
+        {
+          "Label": "LoggedInUsers",
+          "Argv": [
+            "/usr/bin/who"
+          ]
+        },
+        {
+          "Label": "RecentLogins",
+          "Argv": [
+            "/usr/bin/last",
+            "-100"
+          ]
+        },
+        {
+          "Label": "ProcessSnapshot",
+          "Argv": [
+            "/bin/ps",
+            "auxww"
+          ]
+        },
+        {
+          "Label": "NetworkInterfaces",
+          "Argv": [
+            "/sbin/ifconfig",
+            "-a"
+          ]
+        },
+        {
+          "Label": "Routes",
+          "Argv": [
+            "/usr/sbin/netstat",
+            "-rn"
+          ]
+        },
+        {
+          "Label": "DNSConfiguration",
+          "Argv": [
+            "/usr/sbin/scutil",
+            "--dns"
+          ]
+        },
+        {
+          "Label": "ProxyConfiguration",
+          "Argv": [
+            "/usr/sbin/scutil",
+            "--proxy"
+          ]
+        },
+        {
+          "Label": "Sockets",
+          "Argv": [
+            "/usr/sbin/lsof",
+            "-nP",
+            "-i"
+          ]
+        },
+        {
+          "Label": "SystemLaunchd",
+          "Argv": [
+            "/bin/launchctl",
+            "print",
+            "system"
+          ]
+        },
+        {
+          "Label": "BackgroundItems",
+          "Argv": [
+            "/usr/bin/sfltool",
+            "dumpbtm"
+          ]
+        },
+        {
+          "Label": "LocalUsers",
+          "Argv": [
+            "/usr/bin/dscl",
+            ".",
+            "-list",
+            "/Users",
+            "UniqueID"
+          ]
+        },
+        {
+          "Label": "LocalAdmins",
+          "Argv": [
+            "/usr/bin/dscl",
+            ".",
+            "-read",
+            "/Groups/admin",
+            "GroupMembership"
+          ]
+        },
+        {
+          "Label": "Applications",
+          "Argv": [
+            "/usr/sbin/system_profiler",
+            "-json",
+            "SPApplicationsDataType",
+            "-timeout",
+            "120"
+          ]
+        },
+        {
+          "Label": "PackageReceipts",
+          "Argv": [
+            "/usr/sbin/pkgutil",
+            "--pkgs"
+          ]
+        },
+        {
+          "Label": "ConfigurationProfiles",
+          "Argv": [
+            "/usr/bin/profiles",
+            "show",
+            "-type",
+            "configuration"
+          ]
+        },
+        {
+          "Label": "SystemExtensions",
+          "Argv": [
+            "/usr/bin/systemextensionsctl",
+            "list"
+          ]
+        },
+        {
+          "Label": "LoadedKernelExtensions",
+          "Argv": [
+            "/usr/bin/kmutil",
+            "showloaded"
+          ]
+        },
+        {
+          "Label": "FileVaultStatus",
+          "Argv": [
+            "/usr/bin/fdesetup",
+            "status"
+          ]
+        },
+        {
+          "Label": "MountedVolumes",
+          "Argv": [
+            "/sbin/mount"
+          ]
+        },
+        {
+          "Label": "DiskInventory",
+          "Argv": [
+            "/usr/sbin/diskutil",
+            "list",
+            "-plist"
+          ]
+        },
+        {
+          "Label": "APFSInventory",
+          "Argv": [
+            "/usr/sbin/diskutil",
+            "apfs",
+            "list",
+            "-plist"
+          ]
+        },
+        {
+          "Label": "FirewallState",
+          "Argv": [
+            "/usr/libexec/ApplicationFirewall/socketfilterfw",
+            "--getglobalstate"
+          ]
+        },
+        {
+          "Label": "FirewallApplications",
+          "Argv": [
+            "/usr/libexec/ApplicationFirewall/socketfilterfw",
+            "--listapps"
+          ]
+        },
+        {
+          "Label": "SecurityLogs24h",
+          "Argv": [
+            "/usr/bin/log",
+            "show",
+            "--last",
+            "24h",
+            "--style",
+            "json",
+            "--predicate",
+            "process == \"sudo\" OR process == \"sshd\" OR process == \"authd\" OR process == \"syspolicyd\" OR process == \"tccd\" OR process == \"XProtectService\""
+          ]
+        }
       ]
+      ''')
       SELECT * FROM foreach(row=Commands, query={
         SELECT Label, Argv, Stdout, Stderr, ReturnCode
         FROM execve(argv=Argv, length=1048576)

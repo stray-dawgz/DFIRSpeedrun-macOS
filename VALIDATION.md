@@ -1,4 +1,4 @@
-# Validation — 0.1.0-rc1
+# Validation — 0.1.0-rc2
 
 Build date: 2026-10-31. Build/test host: Windows. No macOS host was available.
 
@@ -54,3 +54,14 @@ hash, signing assessment, collection runtime/size, errors and expected evidence.
 
 Do not remove the release-candidate label until these native checks pass. This
 triage package does not replace imaging, memory acquisition, EDR or examiner review.
+
+## rc2 regression fix
+
+The first native rc1 attempt failed before collection while parsing the Commands
+source: `1:17: unexpected token "["`. The direct array assignment was invalid
+for the pinned VQL parser. rc2 uses parse_json_array for the command declaration.
+The failure was reproduced on the pinned Windows engine; the fixed declaration
+was evaluated and all 26 command labels and argument vectors matched. The exact
+Commands query also compiled with an empty execution input. Fixture collection
+and all nine launcher scenarios passed again. Native rc2 collection still needs
+validation. Earlier fixture tests replaced the declaration and missed this bug.
