@@ -67,7 +67,9 @@ sources:
       FROM glob(root=RunDirectory, globs=['preflight.txt', 'run-start.txt'], nosymlink=TRUE)
       WHERE RunDirectory
   - name: Host
-    query: SELECT * FROM Artifact.Generic.Client.Info()
+    query: SELECT * FROM info()
+  - name: Interfaces
+    query: SELECT * FROM interfaces()
   - name: Processes
     query: SELECT * FROM Artifact.MacOS.Sys.Pslist()
   - name: Connections

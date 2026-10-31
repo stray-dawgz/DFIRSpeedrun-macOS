@@ -1,4 +1,4 @@
-# Validation — 0.1.0-rc2
+# Validation — 0.1.0-rc3
 
 Build date: 2026-10-31. Build/test host: Windows. No macOS host was available.
 
@@ -65,3 +65,14 @@ was evaluated and all 26 command labels and argument vectors matched. The exact
 Commands query also compiled with an empty execution input. Fixture collection
 and all nine launcher scenarios passed again. Native rc2 collection still needs
 validation. Earlier fixture tests replaced the declaration and missed this bug.
+
+## rc3 macOS dependency fix
+
+A native rc2 attempt failed with `Plugin wmi not found`. The Host source called
+Generic.Client.Info, which includes Windows-only source queries compiled by the
+macOS binary. rc3 uses info() and interfaces() directly. All seven remaining
+transitive artifact definitions were audited for WMI and Windows artifact calls;
+none remain. Exact host and interface queries produced results in the controlled
+Windows fixture run. This is not a native macOS compilation or collection test.
+The shipped Commands regression, artifact verification, collection fixtures and
+nine mocked launcher cases passed. Native rc3 collection remains to be verified.

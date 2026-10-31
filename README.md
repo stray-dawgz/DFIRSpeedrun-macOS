@@ -1,4 +1,4 @@
-# DFIRSpeedrun for macOS — 0.1.0-rc2
+# DFIRSpeedrun for macOS — 0.1.0-rc3
 
 An unattended, offline endpoint triage collector based on Velociraptor 0.77.2,
 matching the operating model of DFIRSpeedrun Windows v0.2.0. Includes native Intel

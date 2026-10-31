@@ -36,8 +36,8 @@ find . -type f ! -name SHA256SUMS -print | LC_ALL=C sort | while IFS= read -r f;
 done > SHA256SUMS
 chmod 755 Start-DFIRSpeedrun.command bin/velociraptor-*
 cd ..
-tar -czf DFIRSpeedrun-macOS-0.1.0-rc2.tar.gz DFIRSpeedrun-macOS
-shasum -a 256 DFIRSpeedrun-macOS-0.1.0-rc2.tar.gz
+tar -czf DFIRSpeedrun-macOS-0.1.0-rc3.tar.gz DFIRSpeedrun-macOS
+shasum -a 256 DFIRSpeedrun-macOS-0.1.0-rc3.tar.gz
 ```
 
 Do not rebuild from a directory containing case outputs or temporary workspaces.
