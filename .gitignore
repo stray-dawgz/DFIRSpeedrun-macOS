@@ -1,0 +1,8 @@
+bin/
+DFIRSpeedrun-*.zip
+DFIRSpeedrun-*.log
+DFIRSpeedrun-*.status.txt
+DFIRSpeedrun-*.preflight.txt
+DFIRSpeedrun-*.sha256
+.DFIRSpeedrun-*/
+*.tar.gz

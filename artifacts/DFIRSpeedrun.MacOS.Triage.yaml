@@ -1,0 +1,134 @@
+name: DFIRSpeedrun.MacOS.Triage
+description: |
+  Curated offline macOS triage. No downloads, server enrollment, remediation,
+  memory acquisition, executable uploads, document or cookie collection.
+  Raw configurations, history and databases remain untrusted evidence.
+  A successful run can contain partial errors. Inspect logs and every source.
+type: CLIENT
+precondition: SELECT OS FROM info() WHERE OS = 'darwin'
+parameters:
+  - name: RunDirectory
+    description: Private directory created by the launcher, for run context only.
+  - name: MaxFileSize
+    type: int
+    default: 134217728
+    description: Raw files above 128 MiB are listed but skipped; no truncation.
+  - name: RawGlobs
+    type: csv
+    default: |
+      Glob
+      /Library/LaunchAgents/*.plist
+      /Library/LaunchAgents/.*.plist
+      /Library/LaunchDaemons/*.plist
+      /Library/LaunchDaemons/.*.plist
+      /System/Library/LaunchAgents/*.plist
+      /System/Library/LaunchDaemons/*.plist
+      /Users/*/Library/LaunchAgents/*.plist
+      /Users/*/Library/LaunchAgents/.*.plist
+      /private/var/root/Library/LaunchAgents/*.plist
+      /private/var/db/com.apple.xpc.launchd/disabled.*.plist
+      /private/var/db/com.apple.backgroundtaskmanagement/BackgroundItems-v*.btm
+      /Users/*/Library/Application Support/com.apple.backgroundtaskmanagementagent/backgrounditems.btm
+      /Users/*/Library/Preferences/com.apple.loginitems.plist
+      /private/var/at/tabs/*
+      /private/etc/hosts
+      /private/etc/ssh/sshd_config
+      /private/etc/ssh/sshd_config.d/*.conf
+      /private/etc/sudoers
+      /private/etc/sudoers.d/*
+      /Library/Receipts/InstallHistory.plist
+      /Library/Preferences/SystemConfiguration/preferences.plist
+      /Library/Preferences/SystemConfiguration/NetworkInterfaces.plist
+      /Library/Preferences/SystemConfiguration/com.apple.airport.preferences.plist
+      /Library/Preferences/com.apple.wifi.known-networks.plist
+      /Library/Application Support/com.apple.TCC/TCC.db*
+      /Users/*/Library/Application Support/com.apple.TCC/TCC.db*
+      /Users/*/Library/Preferences/com.apple.LaunchServices.QuarantineEventsV2*
+      /Users/*/Library/Safari/History.db*
+      /Users/*/Library/Application Support/Google/Chrome/*/History
+      /Users/*/Library/Application Support/Google/Chrome/*/History-wal
+      /Users/*/Library/Application Support/Google/Chrome/*/History-shm
+      /Users/*/Library/Application Support/Microsoft Edge/*/History
+      /Users/*/Library/Application Support/Microsoft Edge/*/History-wal
+      /Users/*/Library/Application Support/Microsoft Edge/*/History-shm
+      /Users/*/Library/Application Support/Firefox/Profiles/*/places.sqlite*
+      /Users/*/.zsh_history
+      /Users/*/.bash_history
+      /Users/*/.zsh_sessions/*.history
+      /Users/*/.bash_sessions/*.history
+      /private/var/root/.zsh_history
+      /private/var/root/.bash_history
+      /private/var/log/install.log
+      /private/var/log/system.log
+sources:
+  - name: RunContext
+    query: |
+      SELECT OSPath, Size, upload(file=OSPath) AS Upload
+      FROM glob(root=RunDirectory, globs=['preflight.txt', 'run-start.txt'], nosymlink=TRUE)
+      WHERE RunDirectory
+  - name: Host
+    query: SELECT * FROM Artifact.Generic.Client.Info()
+  - name: Processes
+    query: SELECT * FROM Artifact.MacOS.Sys.Pslist()
+  - name: Connections
+    query: SELECT * FROM Artifact.MacOS.Network.Netstat(ConnectionStatusRegex='.')
+  - name: Users
+    query: SELECT * FROM Artifact.MacOS.System.Users(OnlyShowRealUsers=FALSE)
+  - name: InstallHistory
+    query: SELECT * FROM Artifact.MacOS.Detection.InstallHistory()
+  - name: QuarantineEvents
+    query: SELECT * FROM Artifact.MacOS.System.QuarantineEvents()
+  - name: TCC
+    query: SELECT * FROM Artifact.MacOS.System.TCC()
+  - name: ChromeHistory
+    query: SELECT * FROM Artifact.MacOS.Applications.Chrome.History()
+  - name: RawArtifacts
+    query: |
+      SELECT OSPath, Size, Mode, IsLink, Mtime, Ctime, Btime, Atime,
+             if(condition=IsLink, then='SKIPPED_SYMLINK',
+                else=if(condition=Size <= MaxFileSize,
+                   then='ATTEMPT_UPLOAD', else='SKIPPED_SIZE_LIMIT')) AS Decision,
+             if(condition=NOT IsLink AND Size <= MaxFileSize,
+                then=upload(file=OSPath, mtime=Mtime)) AS Upload
+      FROM glob(globs=RawGlobs.Glob, nosymlink=TRUE)
+      WHERE NOT IsDir
+  - name: RawPathCoverage
+    query: |
+      SELECT Glob,
+             { SELECT OSPath, Size FROM glob(globs=Glob, nosymlink=TRUE) WHERE NOT IsDir } AS VisibleMatches,
+             'Empty matches mean absent OR inaccessible; consult logs and preflight.' AS Caveat
+      FROM RawGlobs
+  - name: Commands
+    query: |
+      LET Commands <= [
+        dict(Label='OSVersion', Argv=['/usr/bin/sw_vers']),
+        dict(Label='Uptime', Argv=['/usr/bin/uptime']),
+        dict(Label='LoggedInUsers', Argv=['/usr/bin/who']),
+        dict(Label='RecentLogins', Argv=['/usr/bin/last', '-100']),
+        dict(Label='ProcessSnapshot', Argv=['/bin/ps', 'auxww']),
+        dict(Label='NetworkInterfaces', Argv=['/sbin/ifconfig', '-a']),
+        dict(Label='Routes', Argv=['/usr/sbin/netstat', '-rn']),
+        dict(Label='DNSConfiguration', Argv=['/usr/sbin/scutil', '--dns']),
+        dict(Label='ProxyConfiguration', Argv=['/usr/sbin/scutil', '--proxy']),
+        dict(Label='Sockets', Argv=['/usr/sbin/lsof', '-nP', '-i']),
+        dict(Label='SystemLaunchd', Argv=['/bin/launchctl', 'print', 'system']),
+        dict(Label='BackgroundItems', Argv=['/usr/bin/sfltool', 'dumpbtm']),
+        dict(Label='LocalUsers', Argv=['/usr/bin/dscl', '.', '-list', '/Users', 'UniqueID']),
+        dict(Label='LocalAdmins', Argv=['/usr/bin/dscl', '.', '-read', '/Groups/admin', 'GroupMembership']),
+        dict(Label='Applications', Argv=['/usr/sbin/system_profiler', '-json', 'SPApplicationsDataType', '-timeout', '120']),
+        dict(Label='PackageReceipts', Argv=['/usr/sbin/pkgutil', '--pkgs']),
+        dict(Label='ConfigurationProfiles', Argv=['/usr/bin/profiles', 'show', '-type', 'configuration']),
+        dict(Label='SystemExtensions', Argv=['/usr/bin/systemextensionsctl', 'list']),
+        dict(Label='LoadedKernelExtensions', Argv=['/usr/bin/kmutil', 'showloaded']),
+        dict(Label='FileVaultStatus', Argv=['/usr/bin/fdesetup', 'status']),
+        dict(Label='MountedVolumes', Argv=['/sbin/mount']),
+        dict(Label='DiskInventory', Argv=['/usr/sbin/diskutil', 'list', '-plist']),
+        dict(Label='APFSInventory', Argv=['/usr/sbin/diskutil', 'apfs', 'list', '-plist']),
+        dict(Label='FirewallState', Argv=['/usr/libexec/ApplicationFirewall/socketfilterfw', '--getglobalstate']),
+        dict(Label='FirewallApplications', Argv=['/usr/libexec/ApplicationFirewall/socketfilterfw', '--listapps']),
+        dict(Label='SecurityLogs24h', Argv=['/usr/bin/log', 'show', '--last', '24h', '--style', 'json', '--predicate', 'process == "sudo" OR process == "sshd" OR process == "authd" OR process == "syspolicyd" OR process == "tccd" OR process == "XProtectService"'])
+      ]
+      SELECT * FROM foreach(row=Commands, query={
+        SELECT Label, Argv, Stdout, Stderr, ReturnCode
+        FROM execve(argv=Argv, length=1048576)
+      })
